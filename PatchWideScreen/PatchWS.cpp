@@ -11,7 +11,7 @@ int isDisableDarkFilter = 0;
 int isDisableAllBloom = 0;
 int isDisableOverBloom = 0;
 
-unsigned int base_offset = 0x249F0000;
+unsigned int offset_elf = 0x249F0000;
 unsigned int offset_ws = 0x22106C;
 unsigned int offset_fmv_fix1 = 0x269148;
 unsigned int offset_fmv_fix2 = 0x113808;
@@ -146,40 +146,129 @@ unsigned char overbloom2_off[4] = {
 };
 
 
-void patch_ELF(FILE* fp) {
+void patch(FILE* fp, unsigned int base_offset) {
+	if (isWideScreen) {
+		fseek(fp, base_offset + offset_ws, SEEK_SET);
+		fwrite(ws_on, 4, 1, fp);
+	}
+	else {
+		fseek(fp, base_offset + offset_ws, SEEK_SET);
+		fwrite(ws_off, 4, 1, fp);
+	}
 
+	if (isFixFMV) {
+		fseek(fp, base_offset + offset_fmv_fix1, SEEK_SET);
+		fwrite(fmv_fix1_after, 4, 1, fp);
+		fseek(fp, base_offset + offset_fmv_fix2, SEEK_SET);
+		fwrite(fmv_fix2_after, 72, 1, fp);
+	}
+	else {
+		fseek(fp, base_offset + offset_fmv_fix1, SEEK_SET);
+		fwrite(fmv_fix1_before, 4, 1, fp);
+		fseek(fp, base_offset + offset_fmv_fix2, SEEK_SET);
+		fwrite(fmv_fix2_before, 72, 1, fp);
+	}
+
+	if (isPatchFocusOff) {
+		fseek(fp, base_offset + offset_focus_effect, SEEK_SET);
+		fwrite(focus_effect_off, 4, 1, fp);
+	}
+	else {
+		fseek(fp, base_offset + offset_focus_effect, SEEK_SET);
+		fwrite(focus_effect_on, 4, 1, fp);
+	}
+
+	if (isPatchFixBloomOffset) {
+		fseek(fp, base_offset + offset_bloom_offset, SEEK_SET);
+		fwrite(bloom_offset_fix_after, 8, 1, fp);
+	}
+	else {
+		fseek(fp, base_offset + offset_bloom_offset, SEEK_SET);
+		fwrite(bloom_offset_fix_before, 8, 1, fp);
+	}
+
+	if (isDitherEffectOff) {
+		fseek(fp, base_offset + offset_dither_effect, SEEK_SET);
+		fwrite(dither_off, 4, 1, fp);
+	}
+	else {
+		fseek(fp, base_offset + offset_dither_effect, SEEK_SET);
+		fwrite(dither_on, 4, 1, fp);
+	}
+
+	if (isDisableDarkFilter) {
+		fseek(fp, base_offset + offset_dark_filter, SEEK_SET);
+		fwrite(dark_filter_off, 4, 1, fp);
+	}
+	else {
+		fseek(fp, base_offset + offset_dark_filter, SEEK_SET);
+		fwrite(dark_filter_on, 4, 1, fp);
+	}
+
+	if (isDisableAllBloom) {
+		fseek(fp, base_offset + offset_all_bloom, SEEK_SET);
+		fwrite(all_bloom_off, 4, 1, fp);
+	}
+	else {
+		fseek(fp, base_offset + offset_all_bloom, SEEK_SET);
+		fwrite(all_bloom_on, 4, 1, fp);
+	}
+
+	if (isDisableOverBloom) {
+		fseek(fp, base_offset + offset_over_bloom_cutscene, SEEK_SET);
+		fwrite(overbloom1_off, 4, 1, fp);
+		fseek(fp, base_offset + offset_over_bloom_gameplay, SEEK_SET);
+		fwrite(overbloom2_off, 4, 1, fp);
+	}
+	else {
+		fseek(fp, base_offset + offset_over_bloom_cutscene, SEEK_SET);
+		fwrite(overbloom1_on, 4, 1, fp);
+		fseek(fp, base_offset + offset_over_bloom_gameplay, SEEK_SET);
+		fwrite(overbloom2_on, 4, 1, fp);
+	}
+}
+
+void patch_ELF(FILE* fp) {
+	patch(fp, 0);
 }
 
 
 void patch_ISO(FILE* fp) {
-
+	patch(fp, offset_elf);
 }
-
 
 
 void check_opt(char *opt) {
 	if (strstr(opt, "0") != NULL) {
+		printf("wide screen on\n");
 		isWideScreen = 1;
 	}
 	if (strstr(opt, "1") != NULL) {
+		printf("fix FMV\n");
 		isFixFMV = 1;
 	}
 	if (strstr(opt, "2") != NULL) {
-		isPatchFixBloomOffset = 1;
+		printf("focus effect off\n");
+		isPatchFocusOff = 1;
 	}
 	if (strstr(opt, "3") != NULL) {
+		printf("fix bloom offset\n");
 		isPatchFixBloomOffset = 1;
 	}
 	if (strstr(opt, "4") != NULL) {
+		printf("dither + ghost post-process effect off\n");
 		isDitherEffectOff = 1;
 	}
 	if (strstr(opt, "5") != NULL) {
+		printf("disable dark filter\n");
 		isDisableDarkFilter = 1;
 	}
 	if (strstr(opt, "6") != NULL) {
+		printf("disable all bloom\n");
 		isDisableAllBloom = 1;
 	}
 	if (strstr(opt, "7") != NULL) {
+		printf("disable over bloom\n");
 		isDisableOverBloom = 1;
 	}
 }
@@ -191,13 +280,7 @@ int main(int argc, char * argv[]) {
 		return -1;
 	}
 
-	if (argc == 3 && strcmp(argv[1], "-r") != 0) {
-		printf("unknow option\n");
-		printf("usage: patchws [-r] [iso]\n");
-		return -1;
-	}
-
-	FILE *fp, *fout;
+	FILE *fp;
 	if (argc == 1) {
 		if ((fp = fopen("SLPS_255.44", "rb+")) == 0) {
 			printf("error: SLPS_255.44 is not on the same directory.\n");

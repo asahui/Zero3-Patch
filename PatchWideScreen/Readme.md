@@ -24,7 +24,7 @@ Options meaning
 
 -6: Disable all bloom (speedup, but makes the game seem dull)
 
--7: Disable overbloom (cutscene)
+-7: Disable overbloom (cutscene) and Decrease overbloom (gameplay)
 ```
 
 Most of the options are not recommended to open. According to the pnatch file included in pcsx2, the recommended options are:
