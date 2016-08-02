@@ -310,11 +310,11 @@ int main(int argc, char * argv[]) {
 	} else {
 		// check options
 		check_opt(argv[1]);
-		if ((fp = fopen("SLPS_255.44", "rb+")) == 0) {
+		if ((fp = fopen(argv[2], "rb+")) == 0) {
 			printf("error: could not open iso.\n");
 			exit(-1);
 		}
-		// patch SLPS_255.44
+		// patch ISO file
 		patch_ISO(fp);
 	}
 

@@ -1,6 +1,6 @@
 
 ```
-Usage: patch [-01234567] [iso]
+Usage: PatchWideScreen [-01234567] [iso]
 
 if iso is not provided, If iso is not provided, ELF file named as 'SLPS_255.44' is supposed to be patched
 
@@ -29,4 +29,4 @@ Options meaning
 
 Most of the options are not recommended to open. According to the pnatch file included in pcsx2, the recommended options are:
 
-`patchws -123 [iso]`
+`PatchWideScreen -123 [iso]`
